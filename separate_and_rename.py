@@ -3,7 +3,7 @@ import bpy
 bl_info = {
     "name": "Separate and Rename",
     "author": "bulk0vich",
-    "version": (1, 0, 0),
+    "version": (1, 0, 1),
     "blender": (3, 0, 0 ),
     "location": "Edit mode / Ctrl+U",
     "description": "Separate selected vertex in edit mode and rename result object in one(two?) click!",
@@ -11,7 +11,7 @@ bl_info = {
 }
 
 class SeparateAndRename(bpy.types.Operator):
-    bl_idname = "object.custom_draw"
+    bl_idname = "mesh.separate_and_rename"
     bl_label = "Separate selected and rename it"
 
     re_name: bpy.props.StringProperty(name = "Name")
@@ -29,6 +29,7 @@ class SeparateAndRename(bpy.types.Operator):
         v = bpy.context.selected_objects[0]
         o = bpy.context.selected_objects[1]
         o.name = self.re_name
+        o.data.name = self.re_name
         o.select_set(False)
         bpy.ops.object.mode_set( mode = 'EDIT' )
         return {'FINISHED'}
@@ -46,21 +47,26 @@ class SeparateAndRename(bpy.types.Operator):
         row.activate_init = True
         row.prop(self, "re_name")
 
-def menu_func(self, context):
-    self.layout.operator(CustomDrawOperator.bl_idname, text="SeparateAndRename")
 
 addon_keymaps = []
 
 def register():
 
     bpy.utils.register_class(SeparateAndRename)
-    # handle the keymap
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D')
     kmi = km.keymap_items.new(SeparateAndRename.bl_idname, 'U', 'PRESS', ctrl=True, shift=False)
     addon_keymaps.append((km, kmi))
     
-    bpy.types.VIEW3D_MT_select_edit_mesh.append(menu_func)
+    
+def unregister():
+
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
+
+    bpy.utils.unregister_class(SeparateAndRename)
+
     
 if __name__ == "__main__":
     register()
